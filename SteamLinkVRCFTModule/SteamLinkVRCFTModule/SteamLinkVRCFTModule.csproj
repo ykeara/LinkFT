@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\VRCFaceTracking\VRCFaceTracking.Core\VRCFaceTracking.Core.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /s $(SolutionDir)x64\$(Configuration)\ $(ProjectDir)bin\$(Configuration)\$(TargetFramework) /Y&#xD;&#xA;xcopy /s $(SolutionDir)res $(ProjectDir)bin\$(Configuration)\$(TargetFramework) /Y&#xD;&#xA;xcopy /s $(ProjectDir)bin\$(Configuration)\$(TargetFramework) %25AppData%25\VRCFaceTracking\CustomLibs\2a8c8080-2a76-46af-bf76-1da7c0127ef8 /Y /I" />
+  </Target>
+
+</Project>
