@@ -9,7 +9,7 @@ Included for Reference is my understanding of Valve's OSC specification for Stea
 Specification can be found [here.](https://opensoundcontrol.stanford.edu/spec-1_0.html) 
 
 
-##Paramaters
+## Paramaters
 
 ### **Eye Tracking:**
 Enable in SteamLink Settings in Headset
