@@ -17,3 +17,5 @@ The Implementation is **EXPERIMENTAL** and may change without notice causing app
   - Share eye tracking data... - on
   - Share Face tracking data... - on
   - OSC Output Port - 9015 (Custom: VRCFT,Etc.)
+
+<img src="docs/steamlinksettings.png" width="600" alt="Root Page">
