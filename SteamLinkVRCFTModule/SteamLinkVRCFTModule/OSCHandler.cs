@@ -22,7 +22,7 @@ namespace SteamLinkVRCFTModule
         public readonly float[] eyeTrackData = new float[3];
         public readonly float[] eyelids = new float[2];
 
-        public readonly Dictionary<UnifiedExpressions, float> ueData = new(){
+        public static readonly Dictionary<UnifiedExpressions, float> ueData = new(){
             {EyeWideLeft, 0.0f },
             {EyeWideRight, 0.0f },
             {EyeSquintLeft, 0.0f },
@@ -33,6 +33,7 @@ namespace SteamLinkVRCFTModule
             {BrowOuterUpRight, 0.0f },
             {BrowPinchLeft, 0.0f },
             {BrowLowererLeft, 0.0f },
+            {BrowLowererRight, 0.0f },
             {BrowPinchRight, 0.0f },
 
             { JawOpen, 0.0f},
@@ -91,7 +92,8 @@ namespace SteamLinkVRCFTModule
 
 
         //based on https://docs.google.com/spreadsheets/d/118jo960co3Mgw8eREFVBsaJ7z0GtKNr52IB4Bz99VTA/edit#gid=0
-        private static readonly Dictionary<string, List<UnifiedExpressions>> mapOSCDirectXRFBUnifiedExpressions = new Dictionary<string, List<UnifiedExpressions>>
+        private static readonly 
+        Dictionary<string, List<UnifiedExpressions>> mapOSCDirectXRFBUnifiedExpressions = new Dictionary<string, List<UnifiedExpressions>>
             {
                 {"/sl/xrfb/facew/UpperLidRaiserL", new List<UnifiedExpressions>{EyeWideLeft}},
                 {"/sl/xrfb/facew/UpperLidRaiserR", new List<UnifiedExpressions>{EyeWideRight}},
@@ -182,6 +184,9 @@ namespace SteamLinkVRCFTModule
             _loop = true;
             _thread = new Thread(new ThreadStart(ListenLoop));
             _thread.Start();
+            // 1 second delay to hopefully fix any race conditions on thread initalization
+            //TODO remove this and actually fix the issue
+            Thread.Sleep(1000);
         }
 
         private void ListenLoop()
@@ -201,7 +206,6 @@ namespace SteamLinkVRCFTModule
                         {
                             int i = 16;
                             var elLength = new byte[4];
-                            //_logger.LogInformation("Length is: {len}", length);
                             while (i < length)
                             {
                                 int messageLength = 0;
@@ -216,7 +220,6 @@ namespace SteamLinkVRCFTModule
                                 {
                                     messageLength = BitConverter.ToInt32(buffer, i);
                                 }
-                                //_logger.LogInformation("i: {i}, message l: {messageLength}",i,messageLength);
                                 int adjustLength = 4 - messageLength % 4;
                                 byte[] temp = new byte[messageLength];
                                 Array.Copy(buffer, i + 4, temp, 0, messageLength);
@@ -232,8 +235,7 @@ namespace SteamLinkVRCFTModule
                         foreach (OSCM oscMessage in msgList)
                         {
                             if (oscMessage == null) continue;
-                            //_logger.LogInformation("ADDR: {0}", oscMessage.Address);
-                            //if (oscMessage.Values.Count <= 0) continue;
+                            if (oscMessage.Values.Count < 1) continue;
                             if (oscMessage.Address == "/sl/eyeTrackedGazePoint")
                             {
                                 for (int i = 0; i < 3; i++)
@@ -257,7 +259,6 @@ namespace SteamLinkVRCFTModule
                             //TODO this may need to be reafactored into update going to try as is.
                             if (mapOSCDirectXRFBUnifiedExpressions.ContainsKey(oscMessage.Address))
                             {
-
                                 foreach (UnifiedExpressions unifiedExpression in mapOSCDirectXRFBUnifiedExpressions[oscMessage.Address])
                                 {
                                     ueData[unifiedExpression] = Convert.ToSingle(oscMessage.Values[0].Item2);
