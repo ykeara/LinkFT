@@ -27,6 +27,7 @@ namespace SteamLinkVRCFTModule
                     index++;
                     return index;
                 }
+                //This is sloppy, But need to verify if OSC spec is one null char on address or if it's up to 4?
                 if (msg[index] == 0x00)
                 {
                     if(Address == "")
@@ -69,7 +70,6 @@ namespace SteamLinkVRCFTModule
                                 break;
                             default: return -1;
                         }
-                        //log.LogInformation("Start  44: {1}, {2},{3},{4},{5}", msg[typetagstart], msg[index - 1], msg[index - 2], msg[index - 3], msg[index - 4]);
                         return index;
                     //float
                     case 0x66:
@@ -183,34 +183,18 @@ namespace SteamLinkVRCFTModule
                 iLogger.LogInformation("fail at addr");
                 return;
             }
-
-            //iLogger.LogInformation("Address is: {1}", Address);
             i = getParams(ref message, i, iLogger);
-            //iLogger.LogInformation("param Count: {1}", Values.Count);
             if (i == -1)
             {
                 iLogger.LogInformation("fail at param");
                 return;
             }
-            //iLogger.LogInformation("before vals {1}, {2} ,{3}, {4}, {5}, {6}, {7}", message[i-1], message[i-2], message[i -3], message[i-4], message[i - 5], message[i - 6], message[i - 7]);
             i = getValues(ref message, i, iLogger);
             if (i == -1)
             {
                 iLogger.LogInformation("fail at value");
                 return;
             }
-
-            //if (Address.Contains("EyesClosed"))
-            //{
-            //    iLogger.LogInformation(Address);
-            //    iLogger.LogInformation(Values[0].ToString());
-            //}
-
-            //foreach(var value in Values)
-            //{
-            //    iLogger.LogInformation("Values: {0}", value.ToString());
-            //}
-            //iLogger.LogInformation("succ");
         }
 
     }
