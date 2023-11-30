@@ -123,8 +123,8 @@ namespace SteamLinkVRCFTModule
                 {"/sl/xrfb/facew/LipsToward", new List<UnifiedExpressions>{MouthClosed}},
                 {"/sl/xrfb/facew/LipCornerPullerL", new List<UnifiedExpressions>{ MouthCornerPullLeft, MouthCornerSlantLeft} },
                 {"/sl/xrfb/facew/LipCornerPullerR", new List<UnifiedExpressions>{ MouthCornerPullRight, MouthCornerSlantRight} },
-                {"/sl/xrfb/facew/LipCornerDepressoL", new List<UnifiedExpressions>{ MouthFrownLeft} },
-                {"/sl/xrfb/facew/LipCornerDepressoR", new List<UnifiedExpressions>{ MouthFrownRight} },
+                {"/sl/xrfb/facew/LipCornerDepressorL", new List<UnifiedExpressions>{ MouthFrownLeft} },
+                {"/sl/xrfb/facew/LipCornerDepressorR", new List<UnifiedExpressions>{ MouthFrownRight} },
                 {"/sl/xrfb/facew/LowerLipDepressorL", new List<UnifiedExpressions>{ MouthLowerDownLeft} },
                 {"/sl/xrfb/facew/LowerLipDepressorR", new List<UnifiedExpressions>{ MouthLowerDownRight} },
                 {"/sl/xrfb/facew/UpperLipRaiserL", new List<UnifiedExpressions>{ MouthUpperUpLeft} }, //something odd here

@@ -84,11 +84,6 @@ namespace SteamLinkVRCFTModule
             //lip Suck
             UnifiedTracking.Data.Shapes[(int)LipSuckUpperLeft].Weight = Math.Min(1.0f - (float)Math.Pow(UnifiedTracking.Data.Shapes[(int)MouthUpperLeft].Weight, 1f / 6f), UnifiedTracking.Data.Shapes[(int)LipSuckUpperLeft].Weight);
             UnifiedTracking.Data.Shapes[(int)LipSuckUpperRight].Weight = Math.Min(1.0f - (float)Math.Pow(UnifiedTracking.Data.Shapes[(int)MouthUpperRight].Weight, 1f / 6f), UnifiedTracking.Data.Shapes[(int)LipSuckUpperRight].Weight);
-
-            //frown
-            //Maybe might need some math?
-            UnifiedTracking.Data.Shapes[(int)MouthStretchLeft].Weight = OSCHandler.ueData[MouthFrownLeft];
-            UnifiedTracking.Data.Shapes[(int)MouthStretchLeft].Weight = OSCHandler.ueData[MouthFrownRight];
         }
 
         public override void Update()
