@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
@@ -22,9 +23,16 @@ namespace SteamLinkVRCFTModule
             {
                 if (msg[index] == 0x2c)
                 {
-                    Address = Encoding.ASCII.GetString(msg, 0, index - 1);
+                    //Address = Encoding.ASCII.GetString(msg, 0, index - 1);
                     index++;
                     return index;
+                }
+                if (msg[index] == 0x00)
+                {
+                    if(Address == "")
+                    {
+                        Address = Encoding.ASCII.GetString(msg, 0, index);
+                    }
                 }
 
                 index++;
@@ -100,7 +108,6 @@ namespace SteamLinkVRCFTModule
                 switch (Values[valuecount].Item1)
                 {
                     case 0:
-                        log.LogInformation("int");
                         if (BitConverter.IsLittleEndian)
                         {
                             byte[] msgsize = new byte[4];
@@ -112,25 +119,24 @@ namespace SteamLinkVRCFTModule
                         {
                             Values[valuecount] = new Tuple<int, string>(0, BitConverter.ToInt32(message, i).ToString());
                         }
-                        i = i + 4;
+                        i = i + 3;
                         valuecount++;
 
                         break;
                     case 1:
                         if (BitConverter.IsLittleEndian)
                         {
-                            //log.LogInformation("little");
                             byte[] msgsize = new byte[4];
                             msgsize[0] = message[i]; msgsize[1] = message[i + 1]; msgsize[2] = message[i + 2]; msgsize[3] = message[i + 3];
                             Array.Reverse(msgsize);
-                            Values[valuecount] = new Tuple<int, string>(0, BitConverter.ToSingle(msgsize, 0).ToString());
+                            Values[valuecount] = new Tuple<int, string>(1, BitConverter.ToSingle(msgsize, 0).ToString());
+                            //log.LogInformation("added! {0}", BitConverter.ToSingle(msgsize, 0).ToString());
                         }
                         else
                         {
-                            //log.LogInformation("big");
-                            Values[valuecount] = new Tuple<int, string>(0, BitConverter.ToSingle(message, i).ToString());
+                            Values[valuecount] = new Tuple<int, string>(1, BitConverter.ToSingle(message, i).ToString());
                         }
-                        i = i + 4;
+                        i = i + 3;
                         valuecount++;
 
                         break;
@@ -149,7 +155,7 @@ namespace SteamLinkVRCFTModule
                         valuecount++;
                         //OSC padding to 32 bit chunks (4 byte)
                         i = i + ((i-initialI) % 4);
-                        i++;
+                        //i++;
 
                         break;
                     default:
@@ -171,30 +177,39 @@ namespace SteamLinkVRCFTModule
         public OSCM(ref byte[] message, ILogger iLogger)
         {
             int i = 0;
-            bool hasAddress = false;
-            bool paramsComplete = false;
-            int typetagstart = 0;
-            int valuecount = 0;
-            int valmax = 0;
             i = getAddress(ref message, i);
             if (i == -1)
             {
                 iLogger.LogInformation("fail at addr");
                 return;
             }
+
+            //iLogger.LogInformation("Address is: {1}", Address);
             i = getParams(ref message, i, iLogger);
+            //iLogger.LogInformation("param Count: {1}", Values.Count);
             if (i == -1)
             {
                 iLogger.LogInformation("fail at param");
                 return;
             }
-            //iLogger.LogInformation("before vals {1}, {2} ,{3}, {4}", message[i-1], message[i-2], message[i -3], message[i-4]);
+            //iLogger.LogInformation("before vals {1}, {2} ,{3}, {4}, {5}, {6}, {7}", message[i-1], message[i-2], message[i -3], message[i-4], message[i - 5], message[i - 6], message[i - 7]);
             i = getValues(ref message, i, iLogger);
             if (i == -1)
             {
                 iLogger.LogInformation("fail at value");
                 return;
             }
+
+            //if (Address.Contains("EyesClosed"))
+            //{
+            //    iLogger.LogInformation(Address);
+            //    iLogger.LogInformation(Values[0].ToString());
+            //}
+
+            //foreach(var value in Values)
+            //{
+            //    iLogger.LogInformation("Values: {0}", value.ToString());
+            //}
             //iLogger.LogInformation("succ");
         }
 
@@ -205,7 +220,7 @@ namespace SteamLinkVRCFTModule
         static readonly byte[] bufASCII = Encoding.ASCII.GetBytes("#bundle");
         public static bool IsBundle(ref byte[] buff)
         {
-            if(buff == null)
+            if(buff == null|| buff.Length<8)
             {
                 return false;
             }

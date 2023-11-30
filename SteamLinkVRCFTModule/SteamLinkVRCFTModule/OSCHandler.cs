@@ -11,6 +11,7 @@ using VRCFaceTracking.Core.OSC;
 using VRCFaceTracking.Core.Params.Expressions;
 using VRCFaceTracking.OSC;
 using System.Buffers.Binary;
+using System.Globalization;
 
 namespace SteamLinkVRCFTModule
 {
@@ -19,8 +20,9 @@ namespace SteamLinkVRCFTModule
     public class OSCHandler
     {
         public readonly float[] eyeTrackData = new float[3];
+        public readonly float[] eyelids = new float[2];
 
-        public readonly Dictionary<UnifiedExpressions, float> ueData = new (){
+        public readonly Dictionary<UnifiedExpressions, float> ueData = new(){
             {EyeWideLeft, 0.0f },
             {EyeWideRight, 0.0f },
             {EyeSquintLeft, 0.0f },
@@ -184,7 +186,7 @@ namespace SteamLinkVRCFTModule
 
         private void ListenLoop()
         {
-            var buffer = new byte[4096];
+            var buffer = new byte[8192];
             while (_loop)
             {
                 try
@@ -230,19 +232,36 @@ namespace SteamLinkVRCFTModule
                         foreach (OSCM oscMessage in msgList)
                         {
                             if (oscMessage == null) continue;
-                            if (oscMessage.Values.Count <= 0) continue;
+                            //_logger.LogInformation("ADDR: {0}", oscMessage.Address);
+                            //if (oscMessage.Values.Count <= 0) continue;
                             if (oscMessage.Address == "/sl/eyeTrackedGazePoint")
                             {
-                                _logger.LogInformation("gaze!");
+                                for (int i = 0; i < 3; i++)
+                                {
+                                    eyeTrackData[i] = float.Parse(oscMessage.Values[i].Item2, CultureInfo.InvariantCulture.NumberFormat);
+                                }
+                                continue;
+                            }
+                            if (oscMessage.Address == ("/sl/xrfb/facew/EyesClosedL"))
+                            {
+                                eyelids[0] = (float.Parse(oscMessage.Values[0].Item2));
+                                continue;
+
+                            }
+                            if (oscMessage.Address == "/sl/xrfb/facew/EyesClosedR")
+                            {
+                                eyelids[1] = (float.Parse(oscMessage.Values[0].Item2));
+                                continue;
                             }
 
                             //TODO this may need to be reafactored into update going to try as is.
                             if (mapOSCDirectXRFBUnifiedExpressions.ContainsKey(oscMessage.Address))
                             {
+
                                 foreach (UnifiedExpressions unifiedExpression in mapOSCDirectXRFBUnifiedExpressions[oscMessage.Address])
                                 {
-                                    ueData[unifiedExpression] = (float)Convert.ToDouble(oscMessage.Values[0].Item2);
-                                    UnifiedTracking.Data.Shapes[(int)unifiedExpression].Weight = (float)Convert.ToDouble(oscMessage.Values[0].Item2);
+                                    ueData[unifiedExpression] = Convert.ToSingle(oscMessage.Values[0].Item2);
+                                    //UnifiedTracking.Data.Shapes[(int)unifiedExpression].Weight = Convert.ToSingle(oscMessage.Values[0].Item2);
                                 }
                             }
                         }
@@ -256,7 +275,9 @@ namespace SteamLinkVRCFTModule
                         _receiver.ReceiveTimeout = TIMEOUT_MS;
                     }
                 }
-                catch (Exception) { }
+                catch (Exception e) {
+                    _logger.LogInformation("Exception {0}", e.Message);
+                }
             }
         }
 

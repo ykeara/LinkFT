@@ -10,14 +10,14 @@ namespace SteamLinkVRCFTModule
     public class SteamLinkVRCFTModule : ExtTrackingModule
     {
         private OSCHandler OSCHandler;
-        private const int  DEFAULT_PORT = 9015;
+        private const int DEFAULT_PORT = 9015;
 
         public override (bool SupportsEye, bool SupportsExpression) Supported => (true, true);
 
         public override (bool eyeSuccess, bool expressionSuccess) Initialize(bool eyeAvailable, bool expressionAvailable)
         {
             ModuleInformation.Name = "SteamLink VRCFT Module";
-            
+
             var stream = GetType().Assembly.GetManifestResourceStream("SteamLinkVRCFTModule.Assets.steamlink.png");
             ModuleInformation.StaticImages = stream != null ? new List<Stream> { stream } : ModuleInformation.StaticImages;
 
@@ -37,11 +37,8 @@ namespace SteamLinkVRCFTModule
         private void UpdateEyeTracking()
         {
             {
-                //TODO
-                // float fAngleX = MathF.Atan2(packet.vEyeGazePoint[0], -packet.vEyeGazePoint[2]);
-                // float fAngleY = MathF.Atan2(packet.vEyeGazePoint[1], -packet.vEyeGazePoint[2]);
-                float fAngleX = 0.0f;
-                float fAngleY = 0.0f;
+                float fAngleX = MathF.Atan2(OSCHandler.eyeTrackData[0], -OSCHandler.eyeTrackData[2]);
+                float fAngleY = MathF.Atan2(OSCHandler.eyeTrackData[1], -OSCHandler.eyeTrackData[2]);
 
                 float fNmAngleX = fAngleX / (MathF.PI / 2.0f) * 2.0f;
                 float fNmAngleY = fAngleY / (MathF.PI / 2.0f) * 2.0f;
@@ -63,11 +60,11 @@ namespace SteamLinkVRCFTModule
             }
 
             {
-                //float fLeftOpenness = CalculateEyeOpenness(OSCHandler.ueData.vWeights[(int)XrFBWeights.EyesClosedL], packet.vWeights[(int)XrFBWeights.LidTightenerL]);
-                //float fRightOpenness = CalculateEyeOpenness(packet.vWeights[(int)XrFBWeights.EyesClosedR], packet.vWeights[(int)XrFBWeights.LidTightenerR]);
+                float fLeftOpenness = CalculateEyeOpenness(OSCHandler.eyelids[0], OSCHandler.ueData[UnifiedExpressions.EyeSquintLeft]);
+                float fRightOpenness = CalculateEyeOpenness(OSCHandler.eyelids[1], OSCHandler.ueData[UnifiedExpressions.EyeSquintRight]);
 
-                UnifiedTracking.Data.Eye.Left.Openness = 1.0f;// fLeftOpenness;
-                UnifiedTracking.Data.Eye.Right.Openness = 1.0f;//fRightOpenness;
+                UnifiedTracking.Data.Eye.Left.Openness = fLeftOpenness;// fLeftOpenness;
+                UnifiedTracking.Data.Eye.Right.Openness = fRightOpenness;//fRightOpenness;
             }
 
         }
@@ -75,7 +72,7 @@ namespace SteamLinkVRCFTModule
         {
             foreach (KeyValuePair<UnifiedExpressions, float> entry in OSCHandler.ueData)
             {
-                int nWeightIndex = (int)entry.Key;
+                //int nWeightIndex = (int)entry.Key;
                 UnifiedTracking.Data.Shapes[(int)entry.Key].Weight = entry.Value;
             }
         }
@@ -90,5 +87,5 @@ namespace SteamLinkVRCFTModule
         {
             OSCHandler.Teardown();
         }
-}
+    }
 }
