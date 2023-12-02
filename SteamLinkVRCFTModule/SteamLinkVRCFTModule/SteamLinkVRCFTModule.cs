@@ -24,8 +24,6 @@ namespace SteamLinkVRCFTModule
             //TODO better error handling on fail? isInit for OSC Handler?
             OSCHandler = new OSCHandler(Logger, DEFAULT_PORT);
 
-            Logger.LogInformation("SteamLinkVRCFTModule successfully initialized");
-
             return (true, true);
         }
 

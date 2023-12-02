@@ -192,12 +192,16 @@ namespace SteamLinkVRCFTModule
         private void ListenLoop()
         {
             var buffer = new byte[8192];
+            int count = 0;
+
             while (_loop)
             {
                 try
                 {
                     if (_receiver.IsBound)
                     {
+
+
 
                         var length = _receiver.Receive(buffer);
                         var offset = 0;
@@ -240,19 +244,19 @@ namespace SteamLinkVRCFTModule
                             {
                                 for (int i = 0; i < 3; i++)
                                 {
-                                    eyeTrackData[i] = float.Parse(oscMessage.Values[i].Item2, CultureInfo.InvariantCulture.NumberFormat);
+                                    eyeTrackData[i] = (float)oscMessage.Values[i];
                                 }
                                 continue;
                             }
                             if (oscMessage.Address == ("/sl/xrfb/facew/EyesClosedL"))
                             {
-                                eyelids[0] = (float.Parse(oscMessage.Values[0].Item2));
+                                eyelids[0] = (float)oscMessage.Values[0];
                                 continue;
 
                             }
                             if (oscMessage.Address == "/sl/xrfb/facew/EyesClosedR")
                             {
-                                eyelids[1] = (float.Parse(oscMessage.Values[0].Item2));
+                                eyelids[1] = (float)oscMessage.Values[0];
                                 continue;
                             }
 
@@ -261,7 +265,8 @@ namespace SteamLinkVRCFTModule
                             {
                                 foreach (UnifiedExpressions unifiedExpression in mapOSCDirectXRFBUnifiedExpressions[oscMessage.Address])
                                 {
-                                    ueData[unifiedExpression] = Convert.ToSingle(oscMessage.Values[0].Item2);
+                                    //This may not be strictly safe but should be good enough for our use case
+                                    ueData[unifiedExpression] = (float)oscMessage.Values[0];
                                     //UnifiedTracking.Data.Shapes[(int)unifiedExpression].Weight = Convert.ToSingle(oscMessage.Values[0].Item2);
                                 }
                             }

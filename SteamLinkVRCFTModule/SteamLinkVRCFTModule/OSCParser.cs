@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -7,14 +8,16 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
+using VRCFaceTracking.Core.OSC;
 
 namespace SteamLinkVRCFTModule
 {
     public class OSCM
     {
         public string Address = "";
+        public ArrayList Values = new ArrayList();
         //int = 0, float = 1, blob = 2, string = 3, error = -1
-        public List<Tuple<int, string>> Values = new List<Tuple<int, string>>();
+        private List<int> valType = new List<int>();
 
 
         public int getAddress(ref byte[] msg, int index)
@@ -73,26 +76,26 @@ namespace SteamLinkVRCFTModule
                         return index;
                     //float
                     case 0x66:
-                        Values.Add(new Tuple<int, string>(1, ""));
+                        valType.Add(1);
                         valmax++;
                         break;
                     //int
                     case 0x69:
-                        Values.Add(new Tuple<int, string>(0, ""));
+                        valType.Add(0);
                         valmax++;
                         break;
                     //blob
                     case 0x62:
-                        Values.Add(new Tuple<int, string>(2, ""));
+                        valType.Add(2);
                         valmax++;
                         break;
                     //string
                     case 0x72:
-                        Values.Add(new Tuple<int, string>(3, ""));
+                        valType.Add(3);
                         valmax++;
                         break;
                     default:
-                        Values.Add(new Tuple<int, string>(-1, ""));
+                        valType.Add(-1);
                         break;
                 }
                 index++;
@@ -102,22 +105,22 @@ namespace SteamLinkVRCFTModule
         public int getValues(ref byte[] message, int i, ILogger log)
         {
             int valuecount = 0;
-            int maxVal = Values.Count();
+            int maxVal = valType.Count();
             while (i < message.Length)
             {
-                switch (Values[valuecount].Item1)
+                byte[] msgsize = new byte[4];
+                switch (valType[valuecount])
                 {
                     case 0:
                         if (BitConverter.IsLittleEndian)
                         {
-                            byte[] msgsize = new byte[4];
                             msgsize[0] = message[i]; msgsize[1] = message[i + 1]; msgsize[2] = message[i + 2]; msgsize[3] = message[i + 3];
                             Array.Reverse(msgsize);
-                            Values[valuecount] = new Tuple<int, string>(0, BitConverter.ToInt32(msgsize, 0).ToString());
+                            Values.Add(BitConverter.ToInt32(msgsize, 0));
                         }
                         else
                         {
-                            Values[valuecount] = new Tuple<int, string>(0, BitConverter.ToInt32(message, i).ToString());
+                            Values.Add(BitConverter.ToInt32(message, i));
                         }
                         i = i + 3;
                         valuecount++;
@@ -126,22 +129,19 @@ namespace SteamLinkVRCFTModule
                     case 1:
                         if (BitConverter.IsLittleEndian)
                         {
-                            byte[] msgsize = new byte[4];
                             msgsize[0] = message[i]; msgsize[1] = message[i + 1]; msgsize[2] = message[i + 2]; msgsize[3] = message[i + 3];
                             Array.Reverse(msgsize);
-                            Values[valuecount] = new Tuple<int, string>(1, BitConverter.ToSingle(msgsize, 0).ToString());
-                            //log.LogInformation("added! {0}", BitConverter.ToSingle(msgsize, 0).ToString());
+                            Values.Add(BitConverter.ToSingle(msgsize, 0));
                         }
                         else
                         {
-                            Values[valuecount] = new Tuple<int, string>(1, BitConverter.ToSingle(message, i).ToString());
+                            Values.Add(BitConverter.ToSingle(message, i));
                         }
                         i = i + 3;
                         valuecount++;
 
                         break;
                     case 2:
-                        log.LogInformation("error BLOB");
                         //TODO yea not happening (blob implementation)
                         break;
                     case 3:
@@ -151,10 +151,10 @@ namespace SteamLinkVRCFTModule
                         {
                             i++;
                         }
-                        Values[valuecount] = new Tuple<int, string>(3, Encoding.ASCII.GetString(message, initialI, i));
+                        Values.Add(Encoding.ASCII.GetString(message, initialI, i));
                         valuecount++;
                         //OSC padding to 32 bit chunks (4 byte)
-                        i = i + ((i-initialI) % 4);
+                        i = i + ((i - initialI) % 4);
                         //i++;
 
                         break;
