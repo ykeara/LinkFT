@@ -55,6 +55,14 @@ namespace SteamLinkVRCFTModule
 
                 UnifiedTracking.Data.Eye.Right.Gaze.x = fAngleX;
                 UnifiedTracking.Data.Eye.Right.Gaze.y = fAngleY;
+
+
+                //Pupil Dilation, This is not supported, but if we don't set it can cause issues
+                UnifiedTracking.Data.Eye.Left.PupilDiameter_MM = 5f;
+                UnifiedTracking.Data.Eye.Right.PupilDiameter_MM = 5f;
+                UnifiedTracking.Data.Eye._maxDilation = 10;
+                UnifiedTracking.Data.Eye._minDilation = 0;
+
             }
 
             {
