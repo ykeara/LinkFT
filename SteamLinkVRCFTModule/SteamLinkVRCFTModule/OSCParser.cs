@@ -56,24 +56,7 @@ namespace SteamLinkVRCFTModule
                 {
                     //null i.e. end of params
                     case 0x00:
-                        //TO BE CLEAR there is math for this but I can't be bothered atm
-                        switch ((index - typetagstart) % 4)
-                        {
-                            case 0:
-                                index = index + 4;
-                                break;
-                            case 1:
-                                index = index + 3;
-                                break;
-                            case 2:
-                                index = index + 2;
-                                break;
-                            case 3:
-                                index = index + 1;
-                                break;
-                            default: return -1;
-                        }
-                        return index;
+                        return (4 - ((index - typetagstart) % 4 )+ index);
                     //float
                     case 0x66:
                         valType.Add(1);

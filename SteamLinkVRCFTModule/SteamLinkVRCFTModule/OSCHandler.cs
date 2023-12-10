@@ -192,8 +192,6 @@ namespace SteamLinkVRCFTModule
         private void ListenLoop()
         {
             var buffer = new byte[8192];
-            int count = 0;
-
             while (_loop)
             {
                 try
@@ -204,7 +202,6 @@ namespace SteamLinkVRCFTModule
 
 
                         var length = _receiver.Receive(buffer);
-                        var offset = 0;
                         List<OSCM> msgList = new List<OSCM>();
                         if (OSCParser.IsBundle(ref buffer))
                         {
@@ -260,15 +257,12 @@ namespace SteamLinkVRCFTModule
                                 continue;
                             }
 
-                            //TODO this may need to be reafactored into update going to try as is.
                             if (mapOSCDirectXRFBUnifiedExpressions.ContainsKey(oscMessage.Address))
                             {
                                 foreach (UnifiedExpressions unifiedExpression in mapOSCDirectXRFBUnifiedExpressions[oscMessage.Address])
                                 {
                                     //This may not be strictly safe but should be good enough for our use case
-                                    ueData[unifiedExpression] = (float)oscMessage.Values[0];
-                                    //UnifiedTracking.Data.Shapes[(int)unifiedExpression].Weight = Convert.ToSingle(oscMessage.Values[0].Item2);
-                                }
+                                    ueData[unifiedExpression] = (float)oscMessage.Values[0];                                }
                             }
                         }
                     }
