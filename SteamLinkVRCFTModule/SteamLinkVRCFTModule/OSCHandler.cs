@@ -155,6 +155,16 @@ namespace SteamLinkVRCFTModule
 
                 {"/sl/xrfb/facew/NoseWrinklerL", new List<UnifiedExpressions>{NoseSneerLeft} },
                 {"/sl/xrfb/facew/NoseWrinklerR", new List<UnifiedExpressions>{NoseSneerRight} },
+
+                //Tongue Tracking Params
+                //Some params sent but not part of UE or used? need to look into
+                //{"/sl/xrfb/facew/ToungeTipInterdental",  new List<UnifiedExpressions>{} },
+                //{"/sl/xrfb/facew/FrontDorsalPalate",  new List<UnifiedExpressions>{} },
+                //{"/sl/xrfb/facew/MidDorsalPalate",  new List<UnifiedExpressions>{} },
+                //{"/sl/xrfb/facew/BackDorsalVelar",  new List<UnifiedExpressions>{} },
+                //{"/sl/xrfb/facew/ToungeRetreat",  new List<UnifiedExpressions>{} },
+                {"/sl/xrfb/facew/ToungeTipAlveolar", new List<UnifiedExpressions>{TongueCurlUp} },
+                {"/sl/xrfb/facew/ToungeOut", new List<UnifiedExpressions>{TongueOut} },
             };
 
 
