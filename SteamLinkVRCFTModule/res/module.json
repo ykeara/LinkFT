@@ -1,15 +1,15 @@
 {
-  "ModuleId": "2a8c8080-2a76-46af-bf76-1da7c0127ef8",
-  "LastUpdated": "2023-11-29T12:00:00Z",
-  "Version": "1.0.0",
-  "Downloads": 0,
-  "Ratings": 0,
-  "Rating": 0,
-  "AuthorName": "Ykeara",
-  "ModuleName": "SteamLink VRCFT Module",
-  "ModuleDescription": "VRCFT eye and face tracking module for steamlink on Meta Quest devices.",
-  "UsageInstructions": "Run on VRCFT Launch (uninstall if you need another module)",
-  "DownloadUrl": "https://github.com/ykeara/LinkFT/releases/latest/LinkFTModule.zip",
-  "ModulePageUrl": "https://github.com/ykeara/LinkFT/releases/latest",
-  "DllFileName": "SteamLinkVRCFTModule.dll"
+    "ModuleId": "2a8c8080-2a76-46af-bf76-1da7c0127ef8",
+    "LastUpdated": "2023-12-17T18:47:55.533706",
+    "Version": "1.0.1",
+    "Downloads": 0,
+    "Ratings": 0,
+    "Rating": 0,
+    "AuthorName": "Ykeara",
+    "ModuleName": "SteamLink VRCFT Module",
+    "ModuleDescription": "VRCFT eye and face tracking module for steamlink on Meta Quest devices.",
+    "UsageInstructions": "Run on VRCFT Launch (uninstall if you need another module)",
+    "DownloadUrl": "https://github.com/ykeara/LinkFT/releases/latest/LinkFTModule.zip",
+    "ModulePageUrl": "https://github.com/ykeara/LinkFT/releases/latest",
+    "DllFileName": "SteamLinkVRCFTModule.dll"
 }

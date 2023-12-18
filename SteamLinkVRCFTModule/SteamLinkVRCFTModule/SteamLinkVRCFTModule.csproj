@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /s $(SolutionDir)x64\$(Configuration)\ $(ProjectDir)bin\$(Configuration)\$(TargetFramework) /Y&#xD;&#xA;xcopy /s $(SolutionDir)res $(ProjectDir)bin\$(Configuration)\$(TargetFramework) /Y&#xD;&#xA;xcopy /s $(ProjectDir)bin\$(Configuration)\$(TargetFramework) %25AppData%25\VRCFaceTracking\CustomLibs\2a8c8080-2a76-46af-bf76-1da7c0127ef8 /Y /I" />
+    <Exec Command="cd $(SolutionDir)res\&#xD;&#xA;python moduleupdate.py&#xD;&#xA;xcopy /s /I $(SolutionDir)res\*.json $(ProjectDir)bin\$(Configuration)\$(TargetFramework) /Y&#xD;&#xA;xcopy /s /F $(ProjectDir)bin\$(Configuration)\$(TargetFramework)\module.json %25AppData%25\VRCFaceTracking\CustomLibs\2a8c8080-2a76-46af-bf76-1da7c0127ef8\ /Y&#xD;&#xA;xcopy /s /F $(ProjectDir)bin\$(Configuration)\$(TargetFramework)\SteamLinkVRCFTModule.dll %25AppData%25\VRCFaceTracking\CustomLibs\2a8c8080-2a76-46af-bf76-1da7c0127ef8\ /Y" />
   </Target>
 
 </Project>
