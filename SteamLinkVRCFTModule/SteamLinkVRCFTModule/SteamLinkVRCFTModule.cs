@@ -18,7 +18,7 @@ namespace SteamLinkVRCFTModule
         {
             ModuleInformation.Name = "SteamLink VRCFT Module";
 
-            var stream = GetType().Assembly.GetManifestResourceStream("SteamLinkVRCFTModule.Assets.steamlink.png");
+ 
             ModuleInformation.StaticImages = stream != null ? new List<Stream> { stream } : ModuleInformation.StaticImages;
 
             //TODO better error handling on fail? isInit for OSC Handler?
