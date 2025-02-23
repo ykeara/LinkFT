@@ -170,11 +170,11 @@ namespace SteamLinkVRCFTModule
                 {"/sl/xrfb/facew/TongueOut", new List<UnifiedExpressions>{TongueOut} },
             };
 
-
+        public bool initialized = false; 
 
         private Socket _receiver;
         private bool _loop = true;
-        private readonly Thread _thread;
+        private readonly Thread? _thread;
         private readonly ILogger _logger;
         private readonly int _resolvedPort;
         private const int DEFAULT_PORT = 9015;
@@ -191,15 +191,25 @@ namespace SteamLinkVRCFTModule
 
             _receiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             _resolvedPort = port ?? DEFAULT_PORT;
-            _receiver.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), _resolvedPort));
+            try
+            {
+                _receiver.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), _resolvedPort));
+            }
+            catch (Exception ex) {
+                _logger.LogError(ex.ToString());
+                _logger.LogError($"OSCHandler failed to bind to port {_resolvedPort}");
+                return;
+            }
             _receiver.ReceiveTimeout = TIMEOUT_MS;
 
             _loop = true;
             _thread = new Thread(new ThreadStart(ListenLoop));
             _thread.Start();
+
+            initialized = true;
             // 1 second delay to hopefully fix any race conditions on thread initalization
             //TODO remove this and actually fix the issue
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
         }
 
         private void ListenLoop()
@@ -211,9 +221,6 @@ namespace SteamLinkVRCFTModule
                 {
                     if (_receiver.IsBound)
                     {
-
-
-
                         var length = _receiver.Receive(buffer);
                         List<OSCM> msgList = new List<OSCM>();
                         if (OSCParser.IsBundle(ref buffer))
@@ -275,7 +282,8 @@ namespace SteamLinkVRCFTModule
                                 foreach (UnifiedExpressions unifiedExpression in mapOSCDirectXRFBUnifiedExpressions[oscMessage.Address])
                                 {
                                     //This may not be strictly safe but should be good enough for our use case
-                                    ueData[unifiedExpression] = (float)oscMessage.Values[0];                                }
+                                    ueData[unifiedExpression] = (float)oscMessage.Values[0]; 
+                                }
                             }
                         }
                     }
@@ -299,7 +307,10 @@ namespace SteamLinkVRCFTModule
             _loop = false;
             _receiver.Close();
             _receiver.Dispose();
-            _thread.Join();
+            if (_thread != null)
+            {
+                _thread.Join();
+            }
         }
 
     }

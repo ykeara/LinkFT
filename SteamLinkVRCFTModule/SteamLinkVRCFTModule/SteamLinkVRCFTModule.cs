@@ -3,14 +3,17 @@ using SteamLinkVRCFTModule;
 using System.Net.Sockets;
 using VRCFaceTracking;
 using VRCFaceTracking.Core.Params.Expressions;
+using VRCFaceTracking.Core.Types;
 using static VRCFaceTracking.Core.Params.Expressions.UnifiedExpressions;
 
 namespace SteamLinkVRCFTModule
 {
     public class SteamLinkVRCFTModule : ExtTrackingModule
     {
-        private OSCHandler OSCHandler;
+        private OSCHandler? OSCHandler;
         private const int DEFAULT_PORT = 9015;
+        private bool _ownsEyes = false;
+        private bool _ownsExpressions = false;
 
         public override (bool SupportsEye, bool SupportsExpression) Supported => (true, true);
 
@@ -23,8 +26,13 @@ namespace SteamLinkVRCFTModule
 
             //TODO better error handling on fail? isInit for OSC Handler?
             OSCHandler = new OSCHandler(Logger, DEFAULT_PORT);
+            if (!OSCHandler.initialized)
+            {
+                return (false, false);
+            }
 
-            return (true, true);
+            (_ownsEyes, _ownsExpressions) = (eyeAvailable, expressionAvailable);
+            return (_ownsEyes, _ownsExpressions);
         }
 
         private static float CalculateEyeOpenness(float fEyeClosedWeight, float fEyeTightener)
@@ -94,12 +102,22 @@ namespace SteamLinkVRCFTModule
         public override void Update()
         {
             Thread.Sleep(10);
-            UpdateEyeTracking();
-            UpdateFaceTracking();
+            if (_ownsEyes)
+            {
+                UpdateEyeTracking();
+            }
+            if (_ownsExpressions)
+            {
+                UpdateFaceTracking();
+            }
         }
+
         public override void Teardown()
         {
-            OSCHandler.Teardown();
+            if (OSCHandler != null)
+            {
+                OSCHandler.Teardown();
+            }
         }
     }
 }
