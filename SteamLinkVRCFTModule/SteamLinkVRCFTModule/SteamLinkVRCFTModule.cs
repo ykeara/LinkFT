@@ -14,6 +14,7 @@ namespace SteamLinkVRCFTModule
         private const int DEFAULT_PORT = 9015;
         private bool _ownsEyes = false;
         private bool _ownsExpressions = false;
+        private CancellationTokenSource? _cts;
 
         public override (bool SupportsEye, bool SupportsExpression) Supported => (true, true);
 
@@ -24,10 +25,14 @@ namespace SteamLinkVRCFTModule
             var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("SteamLinkVRCFTModule.Assets.steamlink.png");
             ModuleInformation.StaticImages = stream != null ? new List<Stream> { stream } : ModuleInformation.StaticImages;
 
+            _cts = new CancellationTokenSource();
+
             //TODO better error handling on fail? isInit for OSC Handler?
-            OSCHandler = new OSCHandler(Logger, DEFAULT_PORT);
+            OSCHandler = new OSCHandler(_cts.Token, Logger, DEFAULT_PORT);
             if (!OSCHandler.initialized)
             {
+                // make sure to teardown anything started before returning as uninitialized
+                Teardown();
                 return (false, false);
             }
 
@@ -114,10 +119,9 @@ namespace SteamLinkVRCFTModule
 
         public override void Teardown()
         {
-            if (OSCHandler != null)
-            {
-                OSCHandler.Teardown();
-            }
+            if (_cts != null) _cts.Cancel();
+            if (OSCHandler != null) OSCHandler.Teardown();
+            if (_cts != null) _cts.Dispose();
         }
     }
 }
