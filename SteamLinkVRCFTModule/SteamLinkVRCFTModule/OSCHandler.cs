@@ -1,17 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using VRCFaceTracking;
-using VRCFaceTracking.Core.OSC;
 using VRCFaceTracking.Core.Params.Expressions;
-using VRCFaceTracking.OSC;
-using System.Buffers.Binary;
-using System.Globalization;
 
 namespace SteamLinkVRCFTModule
 {
@@ -170,17 +160,19 @@ namespace SteamLinkVRCFTModule
                 {"/sl/xrfb/facew/TongueOut", new List<UnifiedExpressions>{TongueOut} },
             };
 
-
+        public bool initialized = false; 
 
         private Socket _receiver;
         private bool _loop = true;
-        private readonly Thread _thread;
+        private bool _communicating = false; 
+        private readonly Thread? _thread;
         private readonly ILogger _logger;
         private readonly int _resolvedPort;
         private const int DEFAULT_PORT = 9015;
         private const int TIMEOUT_MS = 10_000;
+        private const int INITIAL_TIMEOUT_MS = 180_000;
 
-        public OSCHandler(ILogger iLogger, int? port = null)
+        public OSCHandler(CancellationToken ct, ILogger iLogger, int? port = null)
         {
             _logger = iLogger;
             if (_receiver != null)
@@ -191,18 +183,44 @@ namespace SteamLinkVRCFTModule
 
             _receiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             _resolvedPort = port ?? DEFAULT_PORT;
-            _receiver.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), _resolvedPort));
+            try
+            {
+                _receiver.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), _resolvedPort));
+            }
+            catch (Exception ex) {
+                _logger.LogError(ex.ToString());
+                _logger.LogError($"OSCHandler failed to bind to port {_resolvedPort}");
+                return;
+            }
             _receiver.ReceiveTimeout = TIMEOUT_MS;
 
             _loop = true;
             _thread = new Thread(new ThreadStart(ListenLoop));
             _thread.Start();
-            // 1 second delay to hopefully fix any race conditions on thread initalization
+
+            // this is stupid but I'm stupid
+            Task t = Task.Run(() => {
+                _logger.LogInformation($"Waiting {INITIAL_TIMEOUT_MS / 1000.0} seconds for message from SteamLink on port {_resolvedPort}");
+                while (!_communicating)
+                {
+                    Task.Delay(100).Wait();
+                }
+                _logger.LogInformation($"Received data from SteamLink on port {_resolvedPort}!");
+            });
+            bool result = t.Wait(INITIAL_TIMEOUT_MS, ct);
+            if (!result)
+            {
+                _logger.LogError($"Initialization Timeout. Failed to Receive Message from SteamLink on port {_resolvedPort} within {INITIAL_TIMEOUT_MS / 1000.0} seconds.");
+                // leave Module to initiate teardown
+            }
+
+            initialized = result;
+            // 1 second delay to hopefully fix any race conditions on thread initialization
             //TODO remove this and actually fix the issue
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
         }
 
-        private void ListenLoop()
+        private void ListenLoop() 
         {
             var buffer = new byte[8192];
             while (_loop)
@@ -211,9 +229,6 @@ namespace SteamLinkVRCFTModule
                 {
                     if (_receiver.IsBound)
                     {
-
-
-
                         var length = _receiver.Receive(buffer);
                         List<OSCM> msgList = new List<OSCM>();
                         if (OSCParser.IsBundle(ref buffer))
@@ -252,6 +267,7 @@ namespace SteamLinkVRCFTModule
                             if (oscMessage.Values.Count < 1) continue;
                             if (oscMessage.Address == "/sl/eyeTrackedGazePoint")
                             {
+                                if (!_communicating) _communicating = true;
                                 for (int i = 0; i < 3; i++)
                                 {
                                     eyeTrackData[i] = (float)oscMessage.Values[i];
@@ -260,29 +276,36 @@ namespace SteamLinkVRCFTModule
                             }
                             if (oscMessage.Address == ("/sl/xrfb/facew/EyesClosedL"))
                             {
+                                if (!_communicating) _communicating = true;
                                 eyelids[0] = (float)oscMessage.Values[0];
                                 continue;
 
                             }
                             if (oscMessage.Address == "/sl/xrfb/facew/EyesClosedR")
                             {
+                                if (!_communicating) _communicating = true;
                                 eyelids[1] = (float)oscMessage.Values[0];
                                 continue;
                             }
 
                             if (mapOSCDirectXRFBUnifiedExpressions.ContainsKey(oscMessage.Address))
                             {
+                                if (!_communicating) _communicating = true;
                                 foreach (UnifiedExpressions unifiedExpression in mapOSCDirectXRFBUnifiedExpressions[oscMessage.Address])
                                 {
                                     //This may not be strictly safe but should be good enough for our use case
-                                    ueData[unifiedExpression] = (float)oscMessage.Values[0];                                }
+                                    ueData[unifiedExpression] = (float)oscMessage.Values[0]; 
+                                }
                             }
                         }
                     }
                     else
                     {
+                        // attempt to rebind? 
                         _receiver.Close();
                         _receiver.Dispose();
+                        _communicating = false;
+
                         _receiver = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                         _receiver.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), _resolvedPort));
                         _receiver.ReceiveTimeout = TIMEOUT_MS;
@@ -299,7 +322,11 @@ namespace SteamLinkVRCFTModule
             _loop = false;
             _receiver.Close();
             _receiver.Dispose();
-            _thread.Join();
+            if (_thread != null)
+            {
+                _thread.Join();
+            }
+            _communicating = false;
         }
 
     }

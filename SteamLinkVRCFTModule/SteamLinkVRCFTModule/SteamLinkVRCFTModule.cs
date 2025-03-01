@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using SteamLinkVRCFTModule;
-using System.Net.Sockets;
-using VRCFaceTracking;
+﻿using VRCFaceTracking;
 using VRCFaceTracking.Core.Params.Expressions;
 using static VRCFaceTracking.Core.Params.Expressions.UnifiedExpressions;
 
@@ -9,8 +6,11 @@ namespace SteamLinkVRCFTModule
 {
     public class SteamLinkVRCFTModule : ExtTrackingModule
     {
-        private OSCHandler OSCHandler;
+        private OSCHandler? OSCHandler;
         private const int DEFAULT_PORT = 9015;
+        private bool _ownsEyes = false;
+        private bool _ownsExpressions = false;
+        private CancellationTokenSource? _cts;
 
         public override (bool SupportsEye, bool SupportsExpression) Supported => (true, true);
 
@@ -21,10 +21,19 @@ namespace SteamLinkVRCFTModule
             var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("SteamLinkVRCFTModule.Assets.steamlink.png");
             ModuleInformation.StaticImages = stream != null ? new List<Stream> { stream } : ModuleInformation.StaticImages;
 
-            //TODO better error handling on fail? isInit for OSC Handler?
-            OSCHandler = new OSCHandler(Logger, DEFAULT_PORT);
+            _cts = new CancellationTokenSource();
 
-            return (true, true);
+            //TODO better error handling on fail? isInit for OSC Handler?
+            OSCHandler = new OSCHandler(_cts.Token, Logger, DEFAULT_PORT);
+            if (!OSCHandler.initialized)
+            {
+                // make sure to teardown anything started before returning as uninitialized
+                Teardown();
+                return (false, false);
+            }
+
+            (_ownsEyes, _ownsExpressions) = (eyeAvailable, expressionAvailable);
+            return (_ownsEyes, _ownsExpressions);
         }
 
         private static float CalculateEyeOpenness(float fEyeClosedWeight, float fEyeTightener)
@@ -94,12 +103,21 @@ namespace SteamLinkVRCFTModule
         public override void Update()
         {
             Thread.Sleep(10);
-            UpdateEyeTracking();
-            UpdateFaceTracking();
+            if (_ownsEyes)
+            {
+                UpdateEyeTracking();
+            }
+            if (_ownsExpressions)
+            {
+                UpdateFaceTracking();
+            }
         }
+
         public override void Teardown()
         {
-            OSCHandler.Teardown();
+            if (_cts != null) _cts.Cancel();
+            if (OSCHandler != null) OSCHandler.Teardown();
+            if (_cts != null) _cts.Dispose();
         }
     }
 }
