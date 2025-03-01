@@ -1,17 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using VRCFaceTracking;
-using VRCFaceTracking.Core.OSC;
 using VRCFaceTracking.Core.Params.Expressions;
-using VRCFaceTracking.OSC;
-using System.Buffers.Binary;
-using System.Globalization;
 
 namespace SteamLinkVRCFTModule
 {
@@ -180,7 +170,7 @@ namespace SteamLinkVRCFTModule
         private readonly int _resolvedPort;
         private const int DEFAULT_PORT = 9015;
         private const int TIMEOUT_MS = 10_000;
-        private const int INITIAL_TIMEOUT_MS = 30_000;
+        private const int INITIAL_TIMEOUT_MS = 180_000;
 
         public OSCHandler(CancellationToken ct, ILogger iLogger, int? port = null)
         {
@@ -210,8 +200,11 @@ namespace SteamLinkVRCFTModule
 
             // this is stupid but I'm stupid
             Task t = Task.Run(() => {
-                //Task.Delay(INITIAL_TIMEOUT_MS + 220).Wait();
-                while (!_communicating) Task.Delay(100).Wait();
+                _logger.LogInformation($"Waiting {INITIAL_TIMEOUT_MS / 1000.0} seconds for message from SteamLink on port {_resolvedPort}");
+                while (!_communicating)
+                {
+                    Task.Delay(100).Wait();
+                }
                 _logger.LogInformation($"Received data from SteamLink on port {_resolvedPort}!");
             });
             bool result = t.Wait(INITIAL_TIMEOUT_MS, ct);
