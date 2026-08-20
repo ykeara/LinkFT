@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using SteamLinkVRCFTModule;
 using System.Net.Sockets;
 using VRCFaceTracking;
@@ -14,7 +14,7 @@ namespace SteamLinkVRCFTModule
         private const int DEFAULT_PORT = 9015;
 
         private bool _eyeTrackingEnabled;
-        private bool _expressionTrackingEnabled;
+        private bool _faceTrackingEnabled;
 
         public override (bool SupportsEye, bool SupportsExpression) Supported => (true, true);
 
@@ -33,17 +33,17 @@ namespace SteamLinkVRCFTModule
                 TrackingMode.Off => false,
                 _ => eyeAvailable
             };
-            _expressionTrackingEnabled = config.ExpressionTracking switch
+            _faceTrackingEnabled = config.FaceTracking switch
             {
                 TrackingMode.On => true,
                 TrackingMode.Off => false,
                 _ => expressionAvailable
             };
 
-            Logger.LogInformation("Tracking claim - Eye: {0} (config: {1}), Expression: {2} (config: {3})",
-                _eyeTrackingEnabled, config.EyeTracking, _expressionTrackingEnabled, config.ExpressionTracking);
+            Logger.LogInformation("Tracking claim - Eye: {0} (config: {1}), Face: {2} (config: {3})",
+                _eyeTrackingEnabled, config.EyeTracking, _faceTrackingEnabled, config.FaceTracking);
 
-            if (!_eyeTrackingEnabled && !_expressionTrackingEnabled)
+            if (!_eyeTrackingEnabled && !_faceTrackingEnabled)
             {
                 Logger.LogInformation("Both eye and expression tracking disabled, staying idle.");
                 return (false, false);
@@ -51,7 +51,7 @@ namespace SteamLinkVRCFTModule
 
             OSCHandler = new OSCHandler(Logger, DEFAULT_PORT);
 
-            return (_eyeTrackingEnabled, _expressionTrackingEnabled);
+            return (_eyeTrackingEnabled, _faceTrackingEnabled);
         }
 
         private static string GetModuleDirectory()
@@ -135,7 +135,7 @@ namespace SteamLinkVRCFTModule
             {
                 UpdateEyeTracking();
             }
-            if (_expressionTrackingEnabled)
+            if (_faceTrackingEnabled)
             {
                 UpdateFaceTracking();
             }

@@ -35,7 +35,7 @@ Because load order is alphabetical by module folder (effectively random), this m
 ```json
 {
   "EyeTracking": "Auto",
-  "ExpressionTracking": "Off"
+  "FaceTracking": "Off"
 }
 ```
 
@@ -47,7 +47,7 @@ Values (case-insensitive):
 | `On` | Always claim this tracking type |
 | `Off` | Never claim this tracking type (let other modules take it) |
 
-Example: with another face tracking module installed, set `ExpressionTracking` to `Off` so SteamLink only provides eye tracking. Restart VRCFT after changing the config.
+Example: with another face tracking module installed, set `FaceTracking` to `Off` so SteamLink only provides eye tracking. Restart VRCFT after changing the config.
 
 The config file is created automatically with defaults on first launch.
 

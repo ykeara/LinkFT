@@ -20,7 +20,7 @@ namespace SteamLinkVRCFTModule
         public TrackingMode EyeTracking { get; set; } = TrackingMode.Auto;
 
         [JsonConverter(typeof(StringEnumConverter))]
-        public TrackingMode ExpressionTracking { get; set; } = TrackingMode.Auto;
+        public TrackingMode FaceTracking { get; set; } = TrackingMode.Auto;
 
         public static TrackingConfig Load(string directory, ILogger logger)
         {
