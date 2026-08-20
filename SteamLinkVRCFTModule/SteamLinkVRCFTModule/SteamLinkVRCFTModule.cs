@@ -2,6 +2,7 @@
 using SteamLinkVRCFTModule;
 using System.Net.Sockets;
 using VRCFaceTracking;
+using VRCFaceTracking.Core.Library;
 using VRCFaceTracking.Core.Params.Expressions;
 using static VRCFaceTracking.Core.Params.Expressions.UnifiedExpressions;
 
@@ -12,6 +13,9 @@ namespace SteamLinkVRCFTModule
         private OSCHandler OSCHandler;
         private const int DEFAULT_PORT = 9015;
 
+        private bool _eyeTrackingEnabled;
+        private bool _expressionTrackingEnabled;
+
         public override (bool SupportsEye, bool SupportsExpression) Supported => (true, true);
 
         public override (bool eyeSuccess, bool expressionSuccess) Initialize(bool eyeAvailable, bool expressionAvailable)
@@ -21,10 +25,39 @@ namespace SteamLinkVRCFTModule
             var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("SteamLinkVRCFTModule.Assets.steamlink.png");
             ModuleInformation.StaticImages = stream != null ? new List<Stream> { stream } : ModuleInformation.StaticImages;
 
-            //TODO better error handling on fail? isInit for OSC Handler?
+            var config = TrackingConfig.Load(GetModuleDirectory(), Logger);
+
+            _eyeTrackingEnabled = config.EyeTracking switch
+            {
+                TrackingMode.On => true,
+                TrackingMode.Off => false,
+                _ => eyeAvailable
+            };
+            _expressionTrackingEnabled = config.ExpressionTracking switch
+            {
+                TrackingMode.On => true,
+                TrackingMode.Off => false,
+                _ => expressionAvailable
+            };
+
+            Logger.LogInformation("Tracking claim - Eye: {0} (config: {1}), Expression: {2} (config: {3})",
+                _eyeTrackingEnabled, config.EyeTracking, _expressionTrackingEnabled, config.ExpressionTracking);
+
+            if (!_eyeTrackingEnabled && !_expressionTrackingEnabled)
+            {
+                Logger.LogInformation("Both eye and expression tracking disabled, staying idle.");
+                return (false, false);
+            }
+
             OSCHandler = new OSCHandler(Logger, DEFAULT_PORT);
 
-            return (true, true);
+            return (_eyeTrackingEnabled, _expressionTrackingEnabled);
+        }
+
+        private static string GetModuleDirectory()
+        {
+            var location = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            return string.IsNullOrEmpty(location) ? "." : Path.GetDirectoryName(location) ?? ".";
         }
 
         private static float CalculateEyeOpenness(float fEyeClosedWeight, float fEyeTightener)
@@ -94,12 +127,22 @@ namespace SteamLinkVRCFTModule
         public override void Update()
         {
             Thread.Sleep(10);
-            UpdateEyeTracking();
-            UpdateFaceTracking();
+            if (Status != ModuleState.Active)
+            {
+                return;
+            }
+            if (_eyeTrackingEnabled)
+            {
+                UpdateEyeTracking();
+            }
+            if (_expressionTrackingEnabled)
+            {
+                UpdateFaceTracking();
+            }
         }
         public override void Teardown()
         {
-            OSCHandler.Teardown();
+            OSCHandler?.Teardown();
         }
     }
 }
