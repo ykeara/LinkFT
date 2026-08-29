@@ -21,7 +21,49 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="cd $(SolutionDir)res\&#xD;&#xA;python moduleupdate.py&#xD;&#xA;xcopy /s /I $(SolutionDir)res\*.json $(ProjectDir)bin\$(Configuration)\$(TargetFramework) /Y&#xD;&#xA;xcopy /s /F $(ProjectDir)bin\$(Configuration)\$(TargetFramework)\module.json %25AppData%25\VRCFaceTracking\CustomLibs\2a8c8080-2a76-46af-bf76-1da7c0127ef8\ /Y&#xD;&#xA;xcopy /s /F $(ProjectDir)bin\$(Configuration)\$(TargetFramework)\SteamLinkVRCFTModule.dll %25AppData%25\VRCFaceTracking\CustomLibs\2a8c8080-2a76-46af-bf76-1da7c0127ef8\ /Y" />
+    <Exec Command="python &quot;$(SolutionDir)res/moduleupdate.py&quot;" WorkingDirectory="$(SolutionDir)res" />
+
+    <ItemGroup>
+      <JsonFiles Include="$(SolutionDir)res/*.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(JsonFiles)" DestinationFolder="$(ProjectDir)bin/$(Configuration)/$(TargetFramework)" />
+
+    <PropertyGroup>
+      <VRCFTPath Condition="'$(OS)' == 'Windows_NT'">$(APPDATA)\VRCFaceTracking\CustomLibs\2a8c8080-2a76-46af-bf76-1da7c0127ef8</VRCFTPath>
+      <VRCFTPath Condition="'$(OS)' != 'Windows_NT'">$(HOME)/.config/VRCFaceTracking/CustomLibs/2a8c8080-2a76-46af-bf76-1da7c0127ef8</VRCFTPath>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(VRCFTPath)" Condition="!Exists('$(VRCFTPath)')" />
+
+    <Copy SourceFiles="$(ProjectDir)bin/$(Configuration)/$(TargetFramework)/SteamLinkVRCFTModule.dll"
+          DestinationFolder="$(VRCFTPath)" />
+    <Copy SourceFiles="$(ProjectDir)bin/$(Configuration)/$(TargetFramework)/module.json"
+          DestinationFolder="$(VRCFTPath)" />
+  </Target>
+
+  <Target Name="ZipModule" AfterTargets="PostBuild">
+    <PropertyGroup>
+      <TempZipFolder>$(OutputPath)temp_zip</TempZipFolder>
+      <ZipFileName>SteamLinkVRCFTModule.zip</ZipFileName>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <FilesToZip Include="$(OutputPath)SteamLinkVRCFTModule.dll" />
+      <FilesToZip Include="$(OutputPath)module.json" />
+    </ItemGroup>
+
+    <Delete Files="$(OutputPath)$(ZipFileName)" ContinueOnError="true" />
+
+    <MakeDir Directories="$(TempZipFolder)" />
+
+    <Copy SourceFiles="@(FilesToZip)" DestinationFolder="$(TempZipFolder)" />
+
+    <ZipDirectory SourceDirectory="$(TempZipFolder)"
+                  DestinationFile="$(OutputPath)$(ZipFileName)" />
+
+    <RemoveDir Directories="$(TempZipFolder)" />
+
+    <Message Text="Created module zip: $(OutputPath)$(ZipFileName)" Importance="high" />
   </Target>
 
 </Project>
