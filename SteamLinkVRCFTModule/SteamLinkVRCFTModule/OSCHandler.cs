@@ -165,8 +165,8 @@ namespace SteamLinkVRCFTModule
                 //{"/sl/xrfb/facew/FrontDorsalPalate",  new List<UnifiedExpressions>{} },
                 //{"/sl/xrfb/facew/MidDorsalPalate",  new List<UnifiedExpressions>{} },
                 //{"/sl/xrfb/facew/BackDorsalVelar",  new List<UnifiedExpressions>{} },
-                //{"/sl/xrfb/facew/TongueRetreat",  new List<UnifiedExpressions>{} },
-                //{"/sl/xrfb/facew/TongueTipAlveolar", new List<UnifiedExpressions>{TongueCurlUp} },
+                {"/sl/xrfb/facew/TongueRetreat",  new List<UnifiedExpressions>{TongueBendDown} },
+                {"/sl/xrfb/facew/TongueTipAlveolar", new List<UnifiedExpressions>{TongueCurlUp} },
                 {"/sl/xrfb/facew/TongueOut", new List<UnifiedExpressions>{TongueOut} },
             };
 
